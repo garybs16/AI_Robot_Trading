@@ -56,7 +56,8 @@ def build_strategy(name: str, params: dict) -> object:
 
 
 def build_broker(config: Any, prices: dict[str, float] | None = None):
-    force_paper = str(config.settings.get("mode", "paper")).lower() == "paper"
+    broker_name = str(config.settings.get("broker", {}).get("name", "paper")).lower()
+    force_paper = str(config.settings.get("mode", "paper")).lower() == "paper" and broker_name == "paper"
     return BrokerFactory.create(config.settings, prices=prices, force_paper=force_paper)
 
 
@@ -145,6 +146,8 @@ def run_paper(args: argparse.Namespace, config, logger: logging.Logger) -> None:
 
     execution_cfg = config.settings.get("execution", {})
     broker = build_broker(config, prices={args.asset: latest_price})
+    if not broker.validate_credentials() and broker.name != "paper":
+        raise PermissionError(f"{broker.name} paper trading requires API credentials in .env")
     risk_manager = RiskManager(config.settings.get("risk", {}))
     order_manager = OrderManager(broker, risk_manager, logger)
     sizer = PositionSizer(
@@ -158,7 +161,8 @@ def run_paper(args: argparse.Namespace, config, logger: logging.Logger) -> None:
     for iteration in range(iterations):
         data = data_provider.get_history(args.asset, asset_type_name, timeframe, limit)
         latest_price = float(data["close"].iloc[-1])
-        broker.set_price(args.asset, latest_price)
+        if hasattr(broker, "set_price"):
+            broker.set_price(args.asset, latest_price)
         signal = strategy.generate_signal(data)
         account = broker.get_account()
         volatility = float(data["close"].pct_change().rolling(20).std().iloc[-1] or 0.0)
@@ -167,6 +171,16 @@ def run_paper(args: argparse.Namespace, config, logger: logging.Logger) -> None:
         portfolio = PortfolioContext(equity=account.equity, open_trades=len(broker.get_positions()))
         logger.info("Paper iteration %s signal=%s price=%s equity=%s", iteration + 1, signal, latest_price, account.equity)
         if signal.action in {SignalAction.BUY, SignalAction.SELL}:
+            if signal.action == SignalAction.SELL:
+                positions = broker.get_positions()
+                possible_symbols = {
+                    args.asset,
+                    args.asset.replace("/", ""),
+                    args.asset.split("/")[0],
+                }
+                if not any(symbol in positions for symbol in possible_symbols):
+                    logger.info("Skipping sell signal for %s because no long position exists", args.asset)
+                    continue
             side = OrderSide.BUY if signal.action == SignalAction.BUY else OrderSide.SELL
             order = OrderRequest(symbol=args.asset, side=side, quantity=quantity, asset_type=asset_type)
             result = order_manager.submit(order, market, portfolio)

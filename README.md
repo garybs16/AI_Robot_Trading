@@ -99,6 +99,60 @@ python src/main.py --mode paper --strategy breakout --asset ETH/USD
 
 Paper mode uses `PaperBroker`, simulated fills, fees, slippage, position tracking, risk validation, and logs every signal/order decision to `logs/trading_bot.log`.
 
+### Broker-Hosted Demo Money
+
+For a real trading app with demo money, use a broker's official paper/sandbox environment.
+
+Alpaca is the recommended first integration for stocks and options paper trading:
+
+1. Create an Alpaca Trading API account.
+2. Switch to the Paper Trading account in Alpaca.
+3. Generate paper API keys.
+4. Put them in `.env`:
+
+```text
+LIVE_TRADING=false
+ALPACA_API_KEY=your_paper_key
+ALPACA_SECRET_KEY=your_paper_secret
+ALPACA_BASE_URL=https://paper-api.alpaca.markets
+```
+
+Then verify account connectivity:
+
+```powershell
+python src/main.py --mode account --broker alpaca --strategy momentum --asset AAPL
+```
+
+Then run automated broker-hosted paper trading:
+
+```powershell
+python src/main.py --mode paper --broker alpaca --strategy momentum --asset AAPL
+```
+
+With `--broker alpaca`, paper mode submits approved orders to Alpaca's paper account. With no broker override, paper mode stays local and uses `PaperBroker`.
+
+Coinbase crypto sandbox is also supported for market and GTC limit crypto orders. Create Coinbase sandbox API credentials, then set:
+
+```text
+COINBASE_KEY_FILE=C:\path\to\coinbase_sandbox_key.json
+```
+
+or:
+
+```text
+COINBASE_API_KEY=organizations/...
+COINBASE_API_SECRET=-----BEGIN EC PRIVATE KEY-----...
+```
+
+Then run:
+
+```powershell
+python src/main.py --mode account --broker coinbase --strategy momentum --asset BTC/USD
+python src/main.py --mode paper --broker coinbase --strategy momentum --asset BTC/USD
+```
+
+Coinbase config defaults to `api-sandbox.coinbase.com`. To point Coinbase at live trading later, you must change the config and pass the live trading guardrails.
+
 ## Real Broker Connectivity
 
 Use `quote` mode for real public market data without account credentials:

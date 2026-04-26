@@ -63,7 +63,11 @@ class BrokerFactory:
             return cls._create_custom(custom_cfg)
 
         if name == "alpaca":
-            return AlpacaBroker(base_url=broker_cfg.get("alpaca", {}).get("base_url"))
+            alpaca_cfg = broker_cfg.get("alpaca", {})
+            return AlpacaBroker(
+                base_url=alpaca_cfg.get("base_url"),
+                paper=bool(alpaca_cfg.get("paper", True)),
+            )
         if name == "binance":
             return BinanceBroker(sandbox=bool(broker_cfg.get("binance", {}).get("sandbox", True)))
         if name in {"coinbase", "coinbase_advanced_trade"}:
@@ -72,6 +76,8 @@ class BrokerFactory:
                 api_key_env=str(coinbase_cfg.get("api_key_env", "COINBASE_API_KEY")),
                 api_secret_env=str(coinbase_cfg.get("api_secret_env", "COINBASE_API_SECRET")),
                 key_file_env=str(coinbase_cfg.get("key_file_env", "COINBASE_KEY_FILE")),
+                base_url=str(coinbase_cfg.get("base_url", "api-sandbox.coinbase.com")),
+                sandbox=bool(coinbase_cfg.get("sandbox", True)),
             )
         if name in {"interactive_brokers", "ib"}:
             return InteractiveBrokersBroker()

@@ -16,13 +16,15 @@ broker:
   allow_live: false
   alpaca:
     base_url: ${ALPACA_BASE_URL}
+    paper: true
   binance:
     sandbox: true
   coinbase:
     api_key_env: COINBASE_API_KEY
     api_secret_env: COINBASE_API_SECRET
     key_file_env: COINBASE_KEY_FILE
-    sandbox: false
+    base_url: api-sandbox.coinbase.com
+    sandbox: true
   interactive_brokers:
     host: ${IB_HOST}
     port: ${IB_PORT}

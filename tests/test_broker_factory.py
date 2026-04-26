@@ -1,4 +1,5 @@
 from brokers.broker_factory import BrokerFactory
+from brokers.alpaca_broker import AlpacaBroker
 from brokers.coinbase_broker import CoinbaseBroker
 from brokers.fidelity_broker import FidelityBroker
 from brokers.paper_broker import PaperBroker
@@ -11,10 +12,21 @@ def test_broker_factory_forces_paper_in_paper_mode():
     assert broker.get_latest_price("BTC/USD") == 100
 
 
+def test_broker_factory_builds_alpaca_paper_adapter():
+    settings = {
+        "broker": {"name": "alpaca", "alpaca": {"base_url": "https://paper-api.alpaca.markets", "paper": True}},
+        "execution": {},
+    }
+    broker = BrokerFactory.create(settings)
+    assert isinstance(broker, AlpacaBroker)
+    assert broker.paper
+
+
 def test_broker_factory_builds_coinbase_adapter():
     settings = {"broker": {"name": "coinbase", "coinbase": {}}, "execution": {}}
     broker = BrokerFactory.create(settings)
     assert isinstance(broker, CoinbaseBroker)
+    assert broker.sandbox
 
 
 def test_coinbase_adapter_accepts_key_file_env(monkeypatch):
