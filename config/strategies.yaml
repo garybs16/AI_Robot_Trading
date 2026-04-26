@@ -1,0 +1,30 @@
+momentum:
+  short_window: 20
+  long_window: 50
+  min_periods: 50
+
+mean_reversion:
+  rsi_period: 14
+  oversold: 30
+  overbought: 70
+  bollinger_window: 20
+  bollinger_std: 2.0
+
+breakout:
+  lookback: 20
+  volume_multiplier: 1.5
+  stop_buffer: 0.02
+
+options:
+  allow_naked_options: false
+  min_days_to_expiration: 7
+  max_days_to_expiration: 90
+
+ai_signal:
+  model_type: random_forest
+  prediction_horizon: 1
+  test_size: 0.25
+  confidence_threshold: 0.60
+  min_training_rows: 120
+  random_state: 42
+

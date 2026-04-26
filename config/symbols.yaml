@@ -1,0 +1,32 @@
+crypto:
+  - symbol: BTC/USD
+    exchange: binance
+    enabled: true
+  - symbol: ETH/USD
+    exchange: binance
+    enabled: true
+  - symbol: SOL/USD
+    exchange: binance
+    enabled: true
+
+stocks:
+  - symbol: AAPL
+    enabled: true
+  - symbol: TSLA
+    enabled: true
+  - symbol: NVDA
+    enabled: true
+  - symbol: SPY
+    enabled: true
+  - symbol: QQQ
+    enabled: true
+
+options:
+  - underlying: SPY
+    expiration: "2026-06-19"
+    strike: 500
+    option_type: call
+    strategy: long_call
+    max_loss: null
+    enabled: false
+
