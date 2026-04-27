@@ -146,6 +146,19 @@ Automation guardrails:
 - stock market-hours filter
 - all orders still pass through `RiskManager`
 
+You can also run the autonomous worker directly from PowerShell:
+
+```powershell
+cd C:\Users\Admin\Documents\Trading_Robot\trading_bot
+python src/auto_run.py --broker alpaca --symbols AAPL,SPY,QQQ --strategy momentum --interval 60
+```
+
+Use preview mode to see decisions without submitting paper orders:
+
+```powershell
+python src/auto_run.py --broker alpaca --symbols AAPL,SPY,QQQ --strategy momentum --interval 60 --preview
+```
+
 ### Broker-Hosted Demo Money
 
 For a real trading app with demo money, use a broker's official paper/sandbox environment.
