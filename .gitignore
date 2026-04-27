@@ -9,4 +9,6 @@ venv/
 logs/
 backtest_results/
 runtime/
+*.db
+*.sqlite
 *.egg-info/

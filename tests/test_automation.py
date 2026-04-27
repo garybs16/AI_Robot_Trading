@@ -30,11 +30,13 @@ def test_symbol_has_position_handles_crypto_and_alpaca_formats():
 
 def test_runtime_store_kill_switch_and_history(tmp_path: Path):
     store = RuntimeStore(tmp_path)
-    store.append_event({"symbol": "AAPL", "status": "preview", "message": "test"})
-    assert store.read_events()[0]["symbol"] == "AAPL"
+    store.append_event({"symbol": "AAPL", "status": "preview", "message": "test", "price": 100.25})
+    event = store.read_events()[0]
+    assert event["symbol"] == "AAPL"
+    assert event["price"] == 100.25
+    assert (tmp_path / "runtime" / "trading_bot.db").exists()
     store.activate_kill_switch("test")
     assert store.kill_switch_active()
     assert "test" in store.kill_switch_reason()
     store.clear_kill_switch()
     assert not store.kill_switch_active()
-

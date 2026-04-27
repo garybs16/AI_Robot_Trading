@@ -1,6 +1,45 @@
-# Trading Bot Framework
+# AI Robot Trading
 
-Production-oriented Python framework for backtesting and paper trading crypto, stocks, and defined-risk options strategies.
+Production-oriented Python trading platform for broker-hosted paper trading, strategy research, backtesting, risk management, AI signals, and autonomous demo execution.
+
+## Portfolio Highlights
+
+- Broker-hosted paper trading with Alpaca and Coinbase sandbox architecture
+- Streamlit dashboard for account status, quotes, signals, backtests, autonomous controls, logs, and history
+- Autonomous multi-symbol paper worker with Start/Stop, kill switch, market-hours filter, and loss lockouts
+- Broker abstraction for Alpaca, Coinbase, Binance, Interactive Brokers, Fidelity extension point, and custom adapters
+- Strategy layer with momentum, mean reversion, breakout, options framework, and scikit-learn AI signal strategy
+- Backtesting engine with equity curves, CSV exports, and professional performance metrics
+- Risk system covering max risk per trade, daily loss, drawdown, max position size, slippage, volatility, and options max loss
+- SQLite runtime audit history, Python logging, Docker packaging, and GitHub Actions CI
+
+## Demo Commands
+
+Run the dashboard:
+
+```powershell
+streamlit run src/dashboard.py
+```
+
+Check Alpaca paper account:
+
+```powershell
+python src/main.py --mode account --broker alpaca --strategy momentum --asset AAPL
+```
+
+Run autonomous paper bot:
+
+```powershell
+python src/auto_run.py --broker alpaca --symbols AAPL,SPY,QQQ,NVDA,TSLA --strategy momentum --interval 60
+```
+
+Run tests:
+
+```powershell
+pytest -q
+```
+
+Architecture details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Resume talking points are in [docs/RESUME_NOTES.md](docs/RESUME_NOTES.md).
 
 ## Critical Risk Warning
 
@@ -21,10 +60,12 @@ Live broker order submission adapters are placeholders by design. Extend them de
 
 ```text
 trading_bot/
+  docs/                Architecture, deployment, portfolio notes
   config/              YAML settings, symbols, and strategy parameters
   src/                 Application code
   tests/               Deterministic pytest suite
   logs/                Runtime logs, created automatically
+  runtime/             SQLite runtime state, created automatically
   backtest_results/    Backtest exports, created automatically
 ```
 
@@ -121,8 +162,21 @@ The dashboard shows:
 - emergency kill switch
 - persistent trade and decision history
 - recent logs
+- SQLite-backed runtime audit trail
 
 Paper order submission from the dashboard requires enabling the paper order checkbox. Live trading remains disabled by config.
+
+## Docker
+
+```powershell
+docker compose up --build
+```
+
+Open:
+
+```text
+http://localhost:8501
+```
 
 ### Autonomous Paper Mode
 

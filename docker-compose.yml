@@ -1,0 +1,13 @@
+services:
+  trading-bot:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./runtime:/app/runtime
+      - ./logs:/app/logs
+      - ./backtest_results:/app/backtest_results
+    command: streamlit run src/dashboard.py --server.address 0.0.0.0 --server.port 8501
+

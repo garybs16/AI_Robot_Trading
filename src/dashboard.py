@@ -471,7 +471,7 @@ def render_trade_history() -> None:
         st.info("No autonomous decisions recorded yet.")
         return
     frame = pd.DataFrame(rows)
-    st.dataframe(frame.iloc[::-1], use_container_width=True, hide_index=True)
+    st.dataframe(frame, use_container_width=True, hide_index=True)
 
 
 def sidebar_controls(config: Any) -> tuple[str, str, str, str, int]:
