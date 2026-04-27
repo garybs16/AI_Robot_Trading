@@ -3,6 +3,9 @@
 ```mermaid
 flowchart LR
     UI[Streamlit Dashboard] --> Runner[Autonomous Paper Runner]
+    API[FastAPI Service] --> Store[(SQLite Runtime Store)]
+    API --> Data[Market Data Provider]
+    API --> Broker[Broker Interface]
     CLI[CLI Commands] --> Runner
     CLI --> Backtest[Backtest Engine]
     Runner --> Data[Market Data Provider]
@@ -16,7 +19,7 @@ flowchart LR
     Broker --> Alpaca[Alpaca Paper API]
     Broker --> Coinbase[Coinbase Sandbox]
     Broker --> Paper[Local Paper Broker]
-    Runner --> Store[(SQLite Runtime Store)]
+    Runner --> Store
     Orders --> Logs[Structured Logs]
 ```
 
@@ -26,6 +29,7 @@ flowchart LR
 - Live trading is blocked by default and requires environment, config, broker, and confirmation guardrails.
 - Broker-hosted paper trading is separate from local simulation.
 - The autonomous runner writes every decision to SQLite for auditability.
+- The FastAPI layer exposes operational health, account status, signals, event history, and kill-switch controls.
 - The dashboard is an operator console, not a trading bypass; orders still flow through `RiskManager` and `OrderManager`.
 
 ## Runtime Modes
@@ -35,4 +39,3 @@ flowchart LR
 - `account`: authenticated broker account check with no orders.
 - `paper`: paper trading through either local simulation or a broker paper API.
 - `live`: guarded path only; disabled unless explicitly configured.
-

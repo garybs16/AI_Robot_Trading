@@ -29,3 +29,5 @@ jobs:
       - name: Import dashboard
         run: python -c "import sys; sys.path.insert(0, 'src'); import dashboard; print('dashboard import ok')"
 
+      - name: Import API
+        run: python -c "import sys; sys.path.insert(0, 'src'); from api.app import app; print(app.title)"

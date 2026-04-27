@@ -2,7 +2,7 @@
 
 ## Suggested Resume Bullet
 
-Built a Python automated trading platform with broker-agnostic execution, Alpaca paper trading integration, Coinbase sandbox support, risk-managed autonomous trading, backtesting, AI signal generation, Streamlit dashboard, SQLite audit history, Docker packaging, and GitHub Actions CI.
+Built a Python automated trading platform with broker-agnostic execution, Alpaca paper trading integration, Coinbase sandbox support, risk-managed autonomous trading, backtesting, AI signal generation, Streamlit dashboard, FastAPI service layer, SQLite audit history, Docker packaging, and GitHub Actions CI.
 
 ## Technical Highlights
 
@@ -11,6 +11,7 @@ Built a Python automated trading platform with broker-agnostic execution, Alpaca
 - Risk controls: per-trade risk, daily loss lockout, drawdown lockout, max position size, slippage/volatility filters
 - Backtesting metrics: total return, CAGR, Sharpe, Sortino, max drawdown, win rate, profit factor
 - Autonomous paper trading worker with market-hours guard, kill switch, and decision history
+- FastAPI operational endpoints for health, account status, quotes, strategy signals, events, and kill-switch control
 
 ## Demo Checklist
 
@@ -21,4 +22,3 @@ Built a Python automated trading platform with broker-agnostic execution, Alpaca
 5. Show SQLite-backed trade/decision history.
 6. Show GitHub Actions passing.
 7. Explain live-trading guardrails.
-

@@ -16,7 +16,20 @@ docker compose up --build
 Open:
 
 ```text
-http://localhost:8501
+Dashboard: http://localhost:8501
+API docs:  http://localhost:8000/docs
+```
+
+## API Service
+
+```powershell
+uvicorn api.app:app --app-dir src --host 127.0.0.1 --port 8000
+```
+
+Health check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
 ```
 
 ## Environment
@@ -31,4 +44,3 @@ ALPACA_BASE_URL=https://paper-api.alpaca.markets
 ```
 
 Never commit `.env`.
-

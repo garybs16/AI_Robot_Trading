@@ -12,6 +12,7 @@ Production-oriented Python trading platform for broker-hosted paper trading, str
 - Backtesting engine with equity curves, CSV exports, and professional performance metrics
 - Risk system covering max risk per trade, daily loss, drawdown, max position size, slippage, volatility, and options max loss
 - SQLite runtime audit history, Python logging, Docker packaging, and GitHub Actions CI
+- FastAPI service layer for health checks, account status, quotes, signals, events, and kill-switch controls
 
 ## Demo Commands
 
@@ -19,6 +20,18 @@ Run the dashboard:
 
 ```powershell
 streamlit run src/dashboard.py
+```
+
+Run the API:
+
+```powershell
+uvicorn api.app:app --app-dir src --host 127.0.0.1 --port 8000
+```
+
+Health check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
 ```
 
 Check Alpaca paper account:
@@ -175,8 +188,21 @@ docker compose up --build
 Open:
 
 ```text
-http://localhost:8501
+Dashboard: http://localhost:8501
+API docs:  http://localhost:8000/docs
 ```
+
+## API Service
+
+FastAPI endpoints:
+
+- `GET /health`: service health, live-trading flag, kill-switch state
+- `GET /account?broker=alpaca`: broker paper account summary
+- `GET /quote?symbol=AAPL`: latest quote/candle snapshot
+- `GET /signal?symbol=AAPL&strategy=momentum`: latest strategy decision
+- `GET /events`: recent autonomous decisions from SQLite
+- `POST /kill-switch`: activate emergency lockout
+- `DELETE /kill-switch`: clear emergency lockout
 
 ### Autonomous Paper Mode
 
