@@ -7,6 +7,14 @@ default_timeframe: "1h"
 data_lookback_bars: 500
 paper_loop_interval_seconds: 60
 paper_max_iterations: 1
+auto_trade:
+  enabled: false
+  submit_orders: true
+  market_hours_only: true
+  symbols:
+    - AAPL
+    - SPY
+    - QQQ
 
 market_data:
   crypto_exchange: coinbase

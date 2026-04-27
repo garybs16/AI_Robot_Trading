@@ -115,9 +115,36 @@ The dashboard shows:
 - quote chart and latest strategy signal
 - one-click backtest metrics
 - a guarded paper-trading action button
+- autonomous Start/Stop controls
+- multi-symbol scanning
+- market-hours-only stock execution
+- emergency kill switch
+- persistent trade and decision history
 - recent logs
 
-Paper order submission from the dashboard requires checking the confirmation box first. Live trading remains disabled by config.
+Paper order submission from the dashboard requires enabling the paper order checkbox. Live trading remains disabled by config.
+
+### Autonomous Paper Mode
+
+Open the dashboard, choose:
+
+- Broker: `alpaca`
+- Symbols: for example `AAPL, SPY, QQQ`
+- Strategy: `momentum`, `mean_reversion`, `breakout`, or `ai_signal`
+- Loop interval: at least 15 seconds
+
+Then click **Start Autonomous Bot**. The worker will keep scanning while the Streamlit server is running. Click **Stop Bot** to stop normal automation, or **Emergency Kill Switch** to block future automation until the kill switch is cleared.
+
+Automation guardrails:
+
+- paper mode only
+- `LIVE_TRADING=false`
+- daily loss lockout
+- max drawdown lockout
+- no duplicate buy if a position already exists
+- no sell if no long position exists
+- stock market-hours filter
+- all orders still pass through `RiskManager`
 
 ### Broker-Hosted Demo Money
 

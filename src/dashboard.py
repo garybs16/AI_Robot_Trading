@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,9 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from backtesting.backtest_engine import BacktestEngine
-from brokers.base_broker import AssetType, OrderRequest, OrderSide, OrderStatus
+from automation.bot_runner import AutoBotConfig, AutoPaperBot
+from automation.runtime_store import RuntimeStore
+from brokers.base_broker import AssetType, OrderRequest, OrderSide
 from brokers.broker_factory import BrokerFactory
 from config_loader import ConfigLoader
 from data.market_data import MarketDataProvider
@@ -51,6 +54,10 @@ def load_config() -> Any:
     config.settings["mode"] = "paper"
     config.settings["live_trading"] = False
     return config
+
+
+def runtime_store() -> RuntimeStore:
+    return RuntimeStore(ROOT_DIR)
 
 
 def build_strategy(name: str, params: dict[str, Any]):
@@ -156,6 +163,7 @@ def render_header(broker_name: str, account_ok: bool, live_trading: bool) -> Non
           {status_badge("Paper mode active" if not live_trading else "Live mode flag detected", mode_state)}
           {status_badge(f"Broker: {broker_name}", "neutral")}
           {status_badge("Account connected" if account_ok else "Account not checked", account_state)}
+          {status_badge("Autonomous worker available", "neutral")}
         </div>
         """,
         unsafe_allow_html=True,
@@ -337,6 +345,115 @@ def render_paper_action(config: Any, broker_name: str, symbol: str, data: pd.Dat
             st.warning(result)
 
 
+def bot_is_running() -> bool:
+    thread = st.session_state.get("bot_thread")
+    return bool(thread and thread.is_alive())
+
+
+def start_bot(
+    config: Any,
+    broker_name: str,
+    symbols: list[str],
+    strategy_name: str,
+    timeframe: str,
+    limit: int,
+    interval_seconds: int,
+    submit_orders: bool,
+    market_hours_only: bool,
+) -> None:
+    if bot_is_running():
+        return
+    stop_event = threading.Event()
+    state: dict[str, Any] = {}
+    auto_config = AutoBotConfig(
+        root_dir=ROOT_DIR,
+        settings=config.settings,
+        strategies=config.strategies,
+        broker_name=broker_name,
+        symbols=symbols,
+        strategy_name=strategy_name,
+        timeframe=timeframe,
+        limit=limit,
+        interval_seconds=interval_seconds,
+        submit_orders=submit_orders,
+        market_hours_only=market_hours_only,
+        max_cycles=None,
+    )
+    bot = AutoPaperBot(auto_config, setup_logger(ROOT_DIR), stop_event=stop_event, state=state)
+    thread = threading.Thread(target=bot.run_forever, name="auto-paper-bot", daemon=True)
+    st.session_state["bot_stop_event"] = stop_event
+    st.session_state["bot_state"] = state
+    st.session_state["bot_thread"] = thread
+    thread.start()
+
+
+def stop_bot() -> None:
+    stop_event = st.session_state.get("bot_stop_event")
+    if stop_event:
+        stop_event.set()
+
+
+def render_autonomous_control(
+    config: Any,
+    broker_name: str,
+    selected_symbol: str,
+    strategy_name: str,
+    timeframe: str,
+    limit: int,
+) -> None:
+    store = runtime_store()
+    st.markdown("<div class='section-title'>Autonomous Paper Bot</div>", unsafe_allow_html=True)
+    running = bot_is_running()
+    state = st.session_state.get("bot_state", {})
+
+    status_cols = st.columns(4)
+    status_cols[0].metric("Worker", "Running" if running else "Stopped")
+    status_cols[1].metric("Cycles", state.get("cycle_count", 0))
+    status_cols[2].metric("Last Run", state.get("last_run_at", "-"))
+    status_cols[3].metric("Kill Switch", "ON" if store.kill_switch_active() else "OFF")
+
+    symbol_text = st.text_input("Symbols To Scan", value=selected_symbol, help="Comma-separated, for example AAPL, SPY, QQQ")
+    symbols = [item.strip().upper() for item in symbol_text.split(",") if item.strip()]
+    if not symbols:
+        symbols = [selected_symbol]
+    interval_seconds = st.number_input("Loop Interval Seconds", min_value=15, max_value=3600, value=60, step=15)
+    submit_orders = st.checkbox("Allow automatic paper order submission", value=True)
+    market_hours_only = st.checkbox("Trade stocks only during regular market hours", value=True)
+
+    col1, col2, col3 = st.columns(3)
+    if col1.button("Start Autonomous Bot", disabled=running, use_container_width=True):
+        start_bot(
+            config,
+            broker_name,
+            symbols,
+            strategy_name,
+            timeframe,
+            limit,
+            int(interval_seconds),
+            bool(submit_orders),
+            bool(market_hours_only),
+        )
+        st.rerun()
+    if col2.button("Stop Bot", disabled=not running, use_container_width=True):
+        stop_bot()
+        st.rerun()
+    if col3.button("Emergency Kill Switch", use_container_width=True):
+        stop_bot()
+        store.activate_kill_switch("manual dashboard kill switch")
+        st.rerun()
+
+    if store.kill_switch_active():
+        st.error(f"Kill switch active: {store.kill_switch_reason()}")
+        if st.button("Clear Kill Switch", use_container_width=True):
+            store.clear_kill_switch()
+            st.rerun()
+
+    last_message = state.get("last_message", "No autonomous run yet.")
+    st.caption(last_message)
+    if running:
+        st.info("Leave this Streamlit server running. Closing the terminal stops the bot.")
+
+
 def render_logs() -> None:
     st.markdown("<div class='section-title'>Recent Logs</div>", unsafe_allow_html=True)
     log_path = ROOT_DIR / "logs" / "trading_bot.log"
@@ -345,6 +462,16 @@ def render_logs() -> None:
         return
     lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()[-80:]
     st.code("\n".join(lines), language="text")
+
+
+def render_trade_history() -> None:
+    st.markdown("<div class='section-title'>Trade And Decision History</div>", unsafe_allow_html=True)
+    rows = runtime_store().read_events(limit=200)
+    if not rows:
+        st.info("No autonomous decisions recorded yet.")
+        return
+    frame = pd.DataFrame(rows)
+    st.dataframe(frame.iloc[::-1], use_container_width=True, hide_index=True)
 
 
 def sidebar_controls(config: Any) -> tuple[str, str, str, str, int]:
@@ -390,13 +517,14 @@ def main() -> None:
 
     action_col, backtest_col = st.columns([0.9, 1.1])
     with action_col:
+        render_autonomous_control(config, broker_name, symbol, strategy_name, timeframe, limit)
         render_paper_action(config, broker_name, symbol, data, signal, latest_price)
     with backtest_col:
         render_backtest(config, data, strategy_name)
 
+    render_trade_history()
     render_logs()
 
 
 if __name__ == "__main__":
     main()
-
