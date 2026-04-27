@@ -99,6 +99,26 @@ python src/main.py --mode paper --strategy breakout --asset ETH/USD
 
 Paper mode uses `PaperBroker`, simulated fills, fees, slippage, position tracking, risk validation, and logs every signal/order decision to `logs/trading_bot.log`.
 
+## Dashboard UI
+
+For a non-technical operator view, run the Streamlit dashboard:
+
+```powershell
+cd C:\Users\Admin\Documents\Trading_Robot\trading_bot
+streamlit run src/dashboard.py
+```
+
+The dashboard shows:
+
+- paper account cash, equity, buying power, and positions
+- broker connection status
+- quote chart and latest strategy signal
+- one-click backtest metrics
+- a guarded paper-trading action button
+- recent logs
+
+Paper order submission from the dashboard requires checking the confirmation box first. Live trading remains disabled by config.
+
 ### Broker-Hosted Demo Money
 
 For a real trading app with demo money, use a broker's official paper/sandbox environment.
